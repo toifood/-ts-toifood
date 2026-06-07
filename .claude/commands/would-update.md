@@ -49,7 +49,7 @@ For each category in `migrate`, `price`, `recovery`, `usage`, `instruction`:
    
    {analysis content}
    ```
-4. Prepend the entry into `$GITHUB_WORKSPACE/{category}-ISSUE.md` directly below the `####### <!-- ANCHOR MARKER` line — never edit existing entries below it
+4. Prepend the entry into `$GITHUB_WORKSPACE/would/{category}-issue-v1.md` directly below the `####### <!-- ANCHOR MARKER` line — never edit existing entries below it
 
 #### 3b. ASSET analysis
 1. Read `$root/-MUST/{category}-ASSET.md` — this is your analysis instruction/prompt
@@ -60,7 +60,7 @@ For each category in `migrate`, `price`, `recovery`, `usage`, `instruction`:
    
    {analysis content}
    ```
-4. Prepend the entry into `$GITHUB_WORKSPACE/{category}-ASSET.md` directly below the `####### <!-- ANCHOR MARKER` line — never edit existing entries below it
+4. Prepend the entry into `$GITHUB_WORKSPACE/would/{category}-asset-v1.md` directly below the `####### <!-- ANCHOR MARKER` line — never edit existing entries below it
 
 ### 4. Commit and push
 

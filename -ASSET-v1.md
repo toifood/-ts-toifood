@@ -10,6 +10,22 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-07 14:16 → ts-back file/folder structure aligned to toiflow/ts-anz pattern
+
+Four JS files + `would/` output folder now mirrors ts-anz exactly.
+
+| ts-anz | ts-back equivalent |
+|---|---|
+| `would-read-md.js` (RSS fetch) | `would-read-md.js` (-MUST/ + codebase read) |
+| `would-update-md.js` (Ollama call) | `would-update-md.js` (claude skill runner) |
+| `would-update-content.js` (write docs) | `would-update-content.js` (write would/ via API) |
+| `would-update-csv.js` (CSV log) | `would-update-csv.js` (codebase headline log) |
+| `would/-content-issue-v1.md` | `would/migrate-issue-v1.md` × 5 categories |
+| `would/-content-asset-v1.md` | `would/migrate-asset-v1.md` × 5 categories |
+| `would/-log-asset-v1.csv` | `would/-log-codebase-v1.csv` |
+
+**Skill path updated:** `$GITHUB_WORKSPACE/would/{category}-issue-v1.md` / `would/{category}-asset-v1.md`
+
 ## ASSET:toifood 2026-06-07 13:58 → pipeline fully operational — end-to-end summary
 
 **Status:** Live. First run succeeded 2026-06-07 13:55. Next run: Monday 2026-06-09 18:00 NZST.
