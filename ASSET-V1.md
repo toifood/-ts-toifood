@@ -10,6 +10,30 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-07 17:00 → skill architecture — lives in -toifood, executes in ts-back
+
+The `would-update.md` skill is stored in `-toifood` (org-level, reusable) but executes inside `ts-back`'s GitHub Actions workspace (`$GITHUB_WORKSPACE`). The workflow copies the skill to the Mac Mini runner before invocation.
+
+```
+-toifood/.claude/commands/would-update.md   ← skill definition (org-level)
+  → copied to ~/.claude/commands/ on Mac Mini runner
+  → claude runs with $GITHUB_WORKSPACE = ts-back checkout
+  → writes + commits to ts-back/could/*.md
+```
+
+Design intent: one skill serves any `ts-*` repo — `/would-update ts-front` would write to `ts-front/could/` without any skill changes.
+
+## ASSET:toifood 2026-06-07 17:00 → could/ replaces would/ across ts-back and skill
+
+Output directory renamed `would/` → `could/` in `ts-back`. All references updated:
+
+| File | Change |
+|---|---|
+| `ts-back/could/` | Directory renamed from `would/` |
+| `would-update-csv.js` | `WOULD_DIR` path → `could` |
+| `would-update-content.js` | All file paths `would/` → `could/` |
+| `would-update.yml` | `git add would/log-asset-v1.csv` → `could/` |
+| `would-update.md` skill | `$GITHUB_WORKSPACE/would/` → `could/`; git add step updated |
 ## ASSET:toifood 2026-06-07 16:00 → skill uses branch creation date to find newest ts-toifood-back branch
 
 Skill (`would-update.md`) now detects the newest created branch of `ts-toifood-back` using the GitHub compare API (`compare/main...{branch}`). The last unique commit on each branch gives its effective creation date — the branch with the most recent creation date wins.
