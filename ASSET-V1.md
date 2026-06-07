@@ -10,6 +10,15 @@ REQUIRED FORMAT FOR EACH ASSET ENTRY:
 ## ASSET:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:toifood 2026-06-08 → toifood-dev org live — org split between pipeline and prod source
+
+`toifood-dev` org created at https://github.com/toifood-dev. `-toifood-dev` repo initialised as org config/docs layer.
+
+| Org | Role | Repos |
+|---|---|---|
+| `toifood` | Pipeline + analysis | `-toifood`, `ts-back` (+ future `ts-front`, `ts-web`) |
+| `toifood-dev` | Prod source code | `ts-toifood-back`, `ts-toifood-front`, `ts-toifood-web` (pending transfer from `jayreck996`) |
+
 ## ASSET:toifood 2026-06-08 → file organisation confirmed — each pipeline repo self-contained
 
 ```

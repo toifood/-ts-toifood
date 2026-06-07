@@ -10,6 +10,15 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:toifood 2026-06-08 → toifood-dev org created — prod source repos to migrate from jayreck996
+
+`toifood-dev` GitHub org created 2026-06-08. Houses production source code repos (`ts-toifood-back`, `ts-toifood-front`, `ts-toifood-web`), separate from `toifood` (pipeline/analysis).
+
+**Pending after transfer:**
+- Update Mac Mini git remote: `~/ts-toifood-back` points to `jayreck996/ts-toifood-back` — must update after transfer (PM2 service runs from this path)
+- Update `would-update.md` skill: source URL `jayreck996/ts-toifood-{suffix}` → `toifood-dev/ts-toifood-{suffix}`
+- Verify `TOIFOOD_CROSS_REPO_TOKEN` has `repo` access to `toifood-dev` repos
+
 ## ISSUE:toifood 2026-06-08 → summary index deferred — useful once ts-front and ts-web are live
 
 A `-toifood/README.md` summary index (linking to each pipeline repo's `could/` analysis, last run timestamp, category list) was considered. Decision: defer until ts-front and ts-web are live and the org is shared with other team members. No value adding it for a single pipeline repo. When added: `would-update` skill writes the last run timestamp + GitHub links to `could/` per category as a final step.
