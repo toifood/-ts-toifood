@@ -7,7 +7,7 @@ Analyse the codebase and write 14 issue/asset entries for the target repo.
 
 ### 1. Read codebase context
 
-Read `/tmp/would-source.txt` — prepared by `would-read-md.js`. Contains:
+Read `/tmp/would-read-content.txt` — prepared by `would-read-md.js`. Contains:
 - `## CODEBASE` section: README, package.json, schema.prisma, src/ file tree
 - `## INSTRUCTIONS` section: per-category -MUST/ prompts for migrate, price, recovery, usage, instruction
 
