@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// would-update-csv.js — extract headlines from skill-modified ts-back/could/ files → ts-back/would/LOG-METRIC-{QUARTER}.csv
+// would-update-csv.js â€” extract headlines from skill-modified -ts-back/could/ files â†’ -ts-back/would/LOG-METRIC-{QUARTER}.csv
 
 const fs   = require('fs');
 const path = require('path');
@@ -21,7 +21,7 @@ function extractHeadline(filePath) {
     const content = fs.readFileSync(filePath, 'utf8');
     const anchor  = content.indexOf('####### <!-- ANCHOR MARKER');
     if (anchor === -1) return '';
-    const match   = content.slice(anchor).match(/^##\s+(?:ISSUE|ASSET):[^\n]+→\s*(.+)$/m);
+    const match   = content.slice(anchor).match(/^##\s+(?:ISSUE|ASSET):[^\n]+â†’\s*(.+)$/m);
     return match ? match[1].trim() : '';
   } catch { return ''; }
 }
@@ -33,11 +33,11 @@ function quarterFromFilename(filename) {
 
 function main() {
   const modified = execSync(
-    'git diff --name-only HEAD -- ts-back/could/ && git ls-files --others --exclude-standard ts-back/could/',
+    'git diff --name-only HEAD -- -ts-back/could/ && git ls-files --others --exclude-standard -ts-back/could/',
     { cwd: WORKSPACE }
   ).toString().trim().split('\n').filter(f => f.endsWith('.md') && f !== '');
 
-  if (modified.length === 0) { console.warn('⚠  No changed ts-back/could/ files — skipping CSV'); return; }
+  if (modified.length === 0) { console.warn('âš   No changed -ts-back/could/ files â€” skipping CSV'); return; }
 
   const date      = nzDate();
   const byQuarter = {};
@@ -57,7 +57,7 @@ function main() {
     byQuarter[quarter].push(`${date},${cat},${type},"${headline.replace(/"/g, '""')}"\n`);
   }
 
-  if (Object.keys(byQuarter).length === 0) { console.error('❌ No headlines found — skipping CSV'); process.exit(1); }
+  if (Object.keys(byQuarter).length === 0) { console.error('âŒ No headlines found â€” skipping CSV'); process.exit(1); }
 
   fs.mkdirSync(WOULD_DIR, { recursive: true });
 
@@ -65,7 +65,7 @@ function main() {
     const CSV_PATH = path.join(WOULD_DIR, `LOG-METRIC-${quarter}.csv`);
     const existing = fs.existsSync(CSV_PATH) ? fs.readFileSync(CSV_PATH, 'utf8') : HEADERS;
     fs.writeFileSync(CSV_PATH, existing + rows.join(''));
-    console.log(`✅ ts-back/would/LOG-METRIC-${quarter}.csv — ${rows.length} rows (${date})`);
+    console.log(`âœ… -ts-back/would/LOG-METRIC-${quarter}.csv â€” ${rows.length} rows (${date})`);
   }
 }
 

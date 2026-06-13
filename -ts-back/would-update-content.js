@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// would-update-content.js — upload skill-modified ts-back/could/ files to GitHub API
+// would-update-content.js â€” upload skill-modified -ts-back/could/ files to GitHub API
 
 const fs   = require('fs');
 const path = require('path');
@@ -40,21 +40,21 @@ async function main() {
   if (!GITHUB_TOKEN) throw new Error('GITHUB_TOKEN not set');
 
   const modified = execSync(
-    'git diff --name-only HEAD -- ts-back/could/ && git ls-files --others --exclude-standard ts-back/could/',
+    'git diff --name-only HEAD -- -ts-back/could/ && git ls-files --others --exclude-standard -ts-back/could/',
     { cwd: WORKSPACE }
   ).toString().trim().split('\n').filter(f => f.endsWith('.md') && f !== '');
 
-  if (modified.length === 0) { console.warn('⚠  No changed ts-back/could/ files — nothing to upload'); return; }
+  if (modified.length === 0) { console.warn('âš   No changed -ts-back/could/ files â€” nothing to upload'); return; }
 
   for (const ghPath of modified) {
     const content = fs.readFileSync(path.join(WORKSPACE, ghPath), 'utf8');
     let sha = null;
     try { sha = await githubGet(ghPath); } catch {}
     await githubPut(ghPath, sha, content, `would-update: ${ghPath}`);
-    console.log(`✅ ${ghPath}`);
+    console.log(`âœ… ${ghPath}`);
   }
 
-  console.log('\n✅ Done');
+  console.log('\nâœ… Done');
 }
 
-main().catch(e => { console.error('❌', e.message); process.exit(1); });
+main().catch(e => { console.error('âŒ', e.message); process.exit(1); });
