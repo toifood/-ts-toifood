@@ -10,6 +10,9 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:toifood 2026-06-13 → skill uses /tmp/ zip extraction — local filesystem dependency
+
+`would-update.md` steps 1–2 download a zipball to `/tmp/toifood-source.zip` and extract to `/tmp/toifood-source/`. Creates a local disk dependency on wherever the skill runs. Should read source files via GitHub API directly instead.
 ## ISSUE:toifood 2026-06-13 → listener GitHub API writes silently failing — TOIFOOD_CROSS_REPO_TOKEN likely missing from PM2 env
 
 GH Actions `would-update` run (03:47 UTC / 15:47 NZST) got 202 ✅, skill ran async, produced 16 JSON entries ✅. `writeEntriesToGitHub` in `toigroup-listener.js` made no commits to `toifood/ts-back/could/` — silent failure (caught by try/catch, logged only). Most likely cause: `TOIFOOD_CROSS_REPO_TOKEN` not set in PM2 env for `toigroup-listener` process.
