@@ -23,15 +23,11 @@ TS=$(TZ=Pacific/Auckland date '+%Y-%m-%d %H:%M')
 echo "Quarter: $QUARTER | Timestamp: $TS"
 ```
 
-### 1. Download and extract source repo
+### 1. Find latest branch
 
 Run in bash:
 ```bash
 suffix="${ARGUMENTS#ts-}"
-zipPath="/tmp/toifood-source.zip"
-extractPath="/tmp/toifood-source"
-rm -rf "$extractPath"
-
 latestBranch=""
 latestDate=""
 for branch in $(gh api "repos/toifood-dev/ts-toifood-${suffix}/branches" --jq '.[].name'); do
@@ -44,22 +40,33 @@ for branch in $(gh api "repos/toifood-dev/ts-toifood-${suffix}/branches" --jq '.
   fi
 done
 echo "Branch: $latestBranch"
-
-gh api "repos/toifood-dev/ts-toifood-${suffix}/zipball/${latestBranch}" > "$zipPath"
-unzip -q "$zipPath" -d "$extractPath"
-root=$(find "$extractPath" -mindepth 1 -maxdepth 1 -type d | head -1)
-echo "Root: $root"
 ```
 
-### 2. Read codebase
+### 2. Read codebase via GitHub API
 
-Read from `$root`:
+Fetch the file tree, then read each relevant file — no download or local extraction:
+
+```bash
+suffix="${ARGUMENTS#ts-}"
+
+# Get all blob paths
+gh api "repos/toifood-dev/ts-toifood-${suffix}/git/trees/${latestBranch}?recursive=1" \
+  --jq '.tree[] | select(.type=="blob") | .path'
+```
+
+From the tree, fetch and decode these files via GitHub API:
 - `README.md`
 - `package.json`
 - `prisma/schema.prisma` (skip if absent)
-- Full content of all files under `src/`
+- All files under `src/`
 
-Hold all codebase content in context for all analyses.
+For each path:
+```bash
+gh api "repos/toifood-dev/ts-toifood-${suffix}/contents/${path}?ref=${latestBranch}" \
+  --jq '.content' | base64 -d
+```
+
+Hold all file contents in context for all analyses.
 
 ### 3. Fetch could/ file headers from GitHub
 
@@ -105,6 +112,5 @@ Print a single JSON array — nothing else before or after it:
 Use the computed `$QUARTER` value in each path. Emit exactly 16 objects.
 
 ### 6. Clean up
-```bash
-rm -rf /tmp/toifood-source.zip /tmp/toifood-source
-```
+
+No local files to remove.
