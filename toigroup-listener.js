@@ -59,14 +59,19 @@ function runSkill(quarter_override) {
     ).toString();
 
     const jsonMatch = output.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) throw new Error('No JSON array in skill output');
+    if (!jsonMatch) {
+      console.error(`[${new Date().toISOString()}] skill error: No JSON array in skill output`);
+      console.error(`[${new Date().toISOString()}] raw output (first 2000 chars): ${output.slice(0, 2000)}`);
+      return;
+    }
     const entries = JSON.parse(jsonMatch[0]);
 
     console.log(`[${new Date().toISOString()}] skill done — ${entries.length} entries`);
     writeEntriesToGitHub(entries, process.env.TOIFOOD_CROSS_REPO_TOKEN);
     console.log(`[${new Date().toISOString()}] all entries written`);
   } catch (e) {
-    console.error(`[${new Date().toISOString()}] skill error:`, e.message);
+    console.error(`[${new Date().toISOString()}] skill error: ${e.message}`);
+    if (e.stderr) console.error(`[${new Date().toISOString()}] stderr: ${e.stderr.toString().slice(0, 1000)}`);
   }
 }
 
