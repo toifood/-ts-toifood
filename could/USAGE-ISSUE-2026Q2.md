@@ -17,6 +17,11 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:usage 2026-06-14 23:03 → recipe-metrics.csv is an unbounded flat file with no query layer
+
+`logs/recipe-metrics.csv` is appended on every generation call (`src/routes/recipes.ts:844`). It has no rotation, no size limit, and no query interface. The file lives on the Mac mini M4 filesystem — a disk-full event would silently drop all future metrics writes (the catch block only logs a warning).
+
+Migrating to a `RecipeMetric` Postgres table via Prisma would: enable SQL queries over generation history, tie into the existing backup story, and surface usage patterns (provider breakdown, pantry match rates, continent diversity) without manual CSV parsing. The existing CSV columns map cleanly to a Prisma model.
 ## ISSUE:usage 2026-06-13 18:11 → No pagination on recipe list; OG image generation blocks the request thread
 
 `GET /recipes` returns all recipes for a user in a single query with no limit or cursor — as a user's recipe count grows this will become a memory and latency problem. `@napi-rs/canvas` OG image generation runs synchronously in the recipe-generate request handler: canvas creation, drawing, and PNG encoding block the Node.js event loop per recipe. `runInsightAnalysis` fetches up to 50 recipes and calls Ollama up to 5 times after each recipe generation; under concurrent load this compounds DB query and Ollama pressure. Append-only CSV log files (`RECIPE-METRIC.csv`, `DISCOVER-METRIC.csv`, `DIGEST-METRIC.csv`) have no rotation strategy and grow unboundedly on a long-running server.
