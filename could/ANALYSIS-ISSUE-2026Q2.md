@@ -14,6 +14,7 @@ CUSTOM PROMPT:
 Technical debt, tight coupling, missing abstraction, scalability concerns
 
 PATHS:
+would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
 ## ISSUE:analysis 2026-06-13 18:11 → PM2/log logic duplicated across three files; insights bypasses AIProvider abstraction
