@@ -17,6 +17,9 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:usage 2026-06-15 09:12 → Structured [category:action] logging and dual CSV metric files provide solid observability
+
+All route handlers emit structured console logs in `[category:action]` format: `[recipe:generate]`, `[recipe:result]`, `[recipe:saved]`, `[recipe:share]`, `[recipes:discover]`, `[users:me]`, `[flow:response]`, `[og-image]`, `[youtube]`. This pattern makes grep-based log analysis reliable. Two CSV files — `logs/recipe-metrics.csv` and `logs/discover-metrics.csv` — capture per-request analytics including `pantryPct`, `groceryPct`, `responseMs`, `provider`, `style`, `promptVersion`, and `continent`. The `!metrics` bot command in `src/routes/chat.ts` surfaces today's counts instantly. The `!status` command exposes PM2 process memory and uptime, and `!logs` tails recent error output — giving the solo operator a full ops dashboard via Google Chat.
 ## ASSET:usage 2026-06-14 23:03 → current metrics schema captured per recipe generation
 
 CSV columns (`logs/recipe-metrics.csv`):
