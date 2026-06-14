@@ -14,6 +14,7 @@ CUSTOM PROMPT:
 Performance bottlenecks, N+1 queries, memory leaks, resource exhaustion
 
 PATHS:
+would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
 ## ISSUE:usage 2026-06-13 18:11 → No pagination on recipe list; OG image generation blocks the request thread
