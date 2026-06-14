@@ -17,6 +17,15 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:price 2026-06-14 23:03 → Claude Haiku 4.5 pricing reference and cost projection
+
+Model: `claude-haiku-4-5-20251001`
+- Input: $0.80 / 1M tokens ($0.0008 / 1K)
+- Output: $4.00 / 1M tokens ($0.004 / 1K)
+- Typical recipe call: ~200 in + ~300 out = ~$0.0003/call
+- Prompt cache not currently used (would reduce input cost by 90% on repeated system prompt)
+
+Ollama (`qwen2.5:7b`) cost: $0 (local compute). The fallback path (Claude → Ollama) already de-risks cost spikes. Free tier users default to Ollama; premium users request Claude via `provider=claude` param (`src/routes/recipes.ts:930`).
 ## ASSET:price 2026-06-13 18:11 → Role-tiered rate limiting correctly implemented with Redis atomicity
 
 Rate limits are cleanly tiered by role in `src/middleware/rateLimit.ts`: `free` (3 ollama / 2 claude per hour), `premium` (10 / 5), `admin` (unlimited). A Redis Lua script (`INCR` + `EXPIRE` in one atomic call) prevents the race condition where two concurrent requests both see count=1 and the key never gets an expiry set. `getRecipeUsage()` exposes current used/max/TTL to clients so the frontend can display accurate quota status. The `isPremium` and `isAdmin` flags in `/users/me` are derived cleanly from `role` without separate boolean columns.
