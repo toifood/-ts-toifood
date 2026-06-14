@@ -17,6 +17,9 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:analysis 2026-06-15 09:12 → PM2 helpers are duplicated across chat.ts and slack-bot.ts; OG image generation is inlined in recipes.ts; no tests exist
+
+Three structural concerns: (1) `getPm2Status()`, `getRecentLogs()`, and `getMetricsSummary()` are duplicated across `src/routes/chat.ts` and `src/slack-bot.ts` with identical implementations — two codepaths that will diverge on any PM2 format change. (2) OG image generation (~100 lines, lines 17–144 of recipes.ts) is inlined in the routes file alongside the `emojiCache` Map and `logoBuffer` globals — it belongs in `src/services/og-image.ts`. (3) No test files exist anywhere in the project: no `*.test.ts`, no `jest.config.*`, no `vitest.config.*`, and no test dependencies in `package.json`. The `pluralStem` pantry-matching function, `extractFoodEmoji` pipeline, and Apple JWT verification are all business-critical paths running in production with zero automated coverage.
 ## ISSUE:analysis 2026-06-14 23:03 → cross-provider pantry alignment analysis to validate premium upsell
 
 `logs/recipe-metrics.csv` captures `requestedProvider`, `usedProvider`, `pantryPct`, `groceryPct`, `responseMs`, and `style` for every generation. An analysis grouping by `usedProvider` (ollama vs claude) would reveal:
