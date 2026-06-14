@@ -17,6 +17,9 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:usage 2026-06-15 09:12 → GET /recipes fetches up to 500 full recipe objects with no cursor pagination; emojiCache has no size bound
+
+`src/routes/recipes.ts` line 562–587: `prisma.recipe.findMany` with `take: 500` and no cursor pagination. Each row includes `ingredients` (string[]), `steps` (string[]), `pantryUsed` (string[]) — the full recipe payload. For a user with 400+ saved recipes, this single query returns several MB of JSON on every app load. There is no incremental loading. Combined with the `savedListItems: { select: { listId: true } }` join, this is an N-row lateral join. As usage grows, this endpoint will dominate response latency. Secondary: `emojiCache` Map (line 18) accumulates Twemoji PNG buffers (~3–8 KB each) indefinitely per process lifetime with no eviction — a minor but real memory growth vector over days.
 ## ISSUE:usage 2026-06-14 23:03 → recipe-metrics.csv is an unbounded flat file with no query layer
 
 `logs/recipe-metrics.csv` is appended on every generation call (`src/routes/recipes.ts:844`). It has no rotation, no size limit, and no query interface. The file lives on the Mac mini M4 filesystem — a disk-full event would silently drop all future metrics writes (the catch block only logs a warning).
