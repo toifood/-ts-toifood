@@ -17,6 +17,15 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:usage 2026-06-14 23:03 → current metrics schema captured per recipe generation
+
+CSV columns (`logs/recipe-metrics.csv`):
+`timestamp, userId, requestedProvider, usedProvider, fallback, responseMs, style, filters, pantrySelectedCount, ingredientCount, steps, pantryMatchCount, pantryPct, groceryMatchCount, totalIngredients, groceryPct, promptVersion, continent, title`
+
+Secondary log (`logs/discover-metrics.csv`):
+`timestamp, userId, pantrySize, resultCount, avgPantryPct, avgGroceryPct`
+
+Rate-limit state is tracked separately in Redis via `src/middleware/rateLimit.ts` (`getRecipeUsage`). The two stores (CSV + Redis) are not joined — a unified `RecipeMetric` table would correlate generation events with usage quota in one query.
 ## ASSET:usage 2026-06-13 18:11 → Per-request structured logging and multi-channel daily digest provide strong operational visibility
 
 A request middleware logs method, path, status code, duration, and userId for every HTTP request. `RECIPE-METRIC.csv` captures 19 fields per recipe generation including provider, fallback flag, response time, pantry match percentage, and prompt version — enabling trend analysis without an external APM. `src/digest.ts` posts a daily Google Chat summary with per-provider recipe stats, discover counts, error log summary (via Ollama), and Mac mini infra health snapshots. The Slack bot and Google Chat bot both support on-demand `!status`, `!logs`, `!metrics` commands. Route-level `console.log` prefixes (`[cook:start]`, `[flow:response]`, `[lists:create]`) provide structured audit trails in PM2 logs.
