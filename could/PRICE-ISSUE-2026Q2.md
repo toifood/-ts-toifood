@@ -14,6 +14,7 @@ CUSTOM PROMPT:
 Billing edge cases, subscription state mismatches, failed charge handling
 
 PATHS:
+would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
 ## ISSUE:price 2026-06-13 18:11 → No subscription webhook handling; role upgrades to premium have no automated trigger
