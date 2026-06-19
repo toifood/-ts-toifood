@@ -17,6 +17,17 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:backend 2026-06-20 11:39 -> No payment provider still — plus rate-limit hit rate remains unmeasured and Redis persistence gap confirmed
+
+**Status since June 13th:**
+
+1. **No payment provider (unchanged)**: `UserRole.premium` is still set by manual DB update or admin endpoint only. No Apple IAP validation, no Google Play billing, no Stripe. This has been the case since `price-issue-v1.md` (2026-05-07). No code in `src/services/appstore.ts` or `src/services/playstore.ts` touches `User.role` — those services only read metrics. Subscription state and role elevation are entirely disconnected.
+
+2. **Rate-limit hit rate still unmeasured**: The `recipeGenerateRateLimit()` middleware returns 429 but writes no CSV row, no Redis metric, and sends no Chat/Slack alert. The only signal is in PM2 logs via the global request logger. No way to know: (a) how often free users exhaust limits, (b) whether the free limits (3 ollama/hr, 2 claude/hr) are driving churn, or (c) whether premium users ever exhaust limits.
+
+3. **Redis persistence gap confirmed**: Rate-limit counters reset on any Redis restart. The `dump.rdb` file in the repo root suggests Redis `SAVE` is configured, but `dump.rdb` committed to the repo indicates the file is in the working directory (not a separate data volume). If the repo is cloned fresh or the process restarted, the `dump.rdb` may be stale or absent.
+
+4. **Claude cost visibility**: Claude usage is rate-limited but there is no metric on Anthropic API spend. Token counts are not logged in RECIPE-METRIC.csv. Unexpected Claude usage spikes (e.g., if admin generates hundreds of recipes) produce no cost alert.
 ## ISSUE:price 2026-06-19 16:46 → Rate limits are Redis-ephemeral and the tier model has no automated billing enforcement
 
 **Current model:** `free` = 3 Ollama / 2 Claude per hour; `premium` = 10 Ollama / 5 Claude per hour; `admin` = unlimited. Limits stored in Redis with 1-hour TTL keys.
