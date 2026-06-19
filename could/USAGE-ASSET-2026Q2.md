@@ -17,6 +17,34 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:usage 2026-06-19 16:46 → Metrics schema and instrumentation reference
+
+**recipe-metrics.csv columns:**
+`timestamp, userId, requestedProvider, usedProvider, fallback, responseMs, style, filters, pantrySelectedCount, ingredientCount, steps, pantryMatchCount, pantryPct, groceryMatchCount, totalIngredients, groceryPct, promptVersion, continent, title`
+
+**discover-metrics.csv columns:**
+`timestamp, userId, pantrySize, resultCount, avgPantryPct, avgGroceryPct`
+
+**memory-metrics.csv columns** (written by `src/digest.ts`):
+`timestamp, availableMb, activeMb, inactiveMb, wiredMb, compressedMb, swapMb`
+
+**Current prompt versions:**
+- Claude: `claude-v4` (`src/services/ai/claude.ts`)
+- Ollama: `ollama-v4` (`src/services/ai/ollama.ts`)
+
+**Live monitoring endpoints:**
+- `GET /health` — server liveness (no auth)
+- `GET /stats` — rounded recipe + user counts (60s in-memory cache)
+- `GET /recipes/usage` — per-user Redis rate limit state (auth required)
+- `POST /chat` — Google Chat app handler (!status, !logs, !metrics)
+- Slack socket-mode bot: !status, !logs, !metrics
+
+**Daily digest:** External cron runs `src/digest.ts`. Reads today's CSV rows + PM2 logs + `vm_stat`. Uses local Ollama to summarise. Posts two messages to `GOOGLE_CHAT_WEBHOOK_URL`: recipe stats and memory health table.
+
+**Metric computation notes:**
+- `pantryPct` = `pantryMatchCount / pantrySelectedCount * 100` (selected ingredients used in recipe)
+- `groceryPct` = `pantryUsed.length / recipe.ingredients.length * 100` (pantry coverage of full recipe)
+- `groceryMatchCount` is set to `pantryUsed.length` (same as `pantryMatchCount`) — labelling inconsistency, not a distinct metric.
 ## ASSET:usage 2026-06-19 16:05 → stats endpoint uses in-memory cache with stale fallback; appendMetric/appendDiscoverMetric lazy-initialize CSV files with no external dependency
 
 Two solid resource management patterns: (1) `GET /stats` in `src/index.ts` caches `{ recipesGenerated, cooksJoined }` for 60 seconds with `statsCache` + `statsCachedAt`, rounds counts to the nearest 10 for privacy, and falls back to stale cache on DB error — a correct pattern for a public-facing endpoint that could receive high traffic from the landing page without burdening the DB. (2) `appendMetric()` and `appendDiscoverMetric()` in `src/routes/recipes.ts` both create the `logs/` directory and write the CSV header on first write using `fs.existsSync` guards. No external setup, no migration, no DB table — the analytics pipeline starts automatically on first recipe generation. Errors are caught and warn-logged rather than throwing, so a disk-full event degrades metrics but does not break recipe generation.
