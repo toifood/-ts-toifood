@@ -17,6 +17,9 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:price 2026-06-19 16:05 → Redis rate limit correctly uses increment-then-expire pattern; fail-open on Redis outage prevents generation downtime
+
+The rate limit implementation in `src/middleware/rateLimit.ts` uses `redis.incr(key)` followed by `redis.expire(key, 3600)` only when `count === 1`, which is the correct pattern to avoid resetting the TTL on every request. If `expire` is called on every increment, a sustained burst would never expire — the implementation avoids this correctly. When Redis is unavailable, the catch block logs a warning and calls `next()` (fail-open), ensuring a Redis outage never blocks recipe generation for users. The `getRecipeUsage()` export returns `{ used: 0, max: LIMITS.free.ollama, ttl: 0 }` on Redis failure, giving the client a graceful degraded state rather than an error response.
 ## ASSET:price 2026-06-19 14:28 → bannerUsage from recipeAPI.getUsage() provides server-validated quota display independent of client-side SecureStore counter
 
 `UserDataContext` fetches `bannerUsage` via `recipeAPI.getUsage()` (`GET /recipes/usage`) which returns `{ ollama: { used, max, ttl }, claude: { used, max, ttl } }` from the backend's Redis rate-limit state. This is the authoritative quota source — it cannot be bypassed by reinstall. The client-side `claudeLimit.ts` counter in `AnnouncementBanner` serves as a fast local read, but `bannerUsage` provides the correct fallback for any discrepancy. `user.role` (free/premium/admin) is also returned by the backend and used throughout the UI for premium gating, keeping role state server-authoritative.
