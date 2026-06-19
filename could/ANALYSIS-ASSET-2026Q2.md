@@ -17,6 +17,42 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:analysis 2026-06-19 16:46 → Architecture topology, dependency map, and request flow reference
+
+**Runtime topology:**
+```
+Mobile App (iOS/Android)
+  ↓ HTTPS
+Cloudflare Tunnel → toifood.co.nz
+  ↓
+Mac mini M4 (jayreck)
+  ├── Node.js :3000  — this repo, PM2 managed
+  ├── PostgreSQL :5432  — local
+  └── Redis :6379  — local
+
+Mac mini M4 (jayagent, same host)
+  └── Ollama :11434  — qwen2.5:7b, reached via 127.0.0.1
+```
+
+**POST /recipes/generate request flow:**
+1. `requireAuth` (JWT verify) → `recipeGenerateRateLimit` (Redis INCR)
+2. `prisma.user.findUnique` (role, recipeStyle, continentPreferences) + `prisma.recipe.findMany` (last 20 titles)
+3. Build prompt → send to Ollama (serial queue) or Claude (30s timeout)
+4. On Claude failure → fallback to Ollama
+5. `pluralStem` pantry matching on recipe ingredients
+6. In parallel: `findRecipeVideo(title)` + `generateOgImage(emoji)` (Twemoji CDN fetch)
+7. `appendMetric(...)` → recipe-metrics.csv
+8. Return JSON
+
+**External dependencies:**
+- `https://appleid.apple.com/auth/keys` — Apple JWKS (per Apple auth request, no cache)
+- `https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/*.png` — emoji PNGs (cached in-process)
+- `GOOGLE_CHAT_WEBHOOK_URL` — operational alerts
+- YouTube Data API — `src/services/youtube.ts`
+- Gmail SMTP — `GMAIL_USER` / `GMAIL_APP_PASSWORD`
+- `https://api.anthropic.com/v1/messages` — Claude (when `AI_PROVIDER=claude` or `provider=claude`)
+
+**Active data models:** User, Recipe, RecipeReview, SavedList, SavedListItem, DietaryPreference, PantryItem, Flow, FlowStep, UserFlowView, PasswordResetToken, EmailVerificationToken
 ## ASSET:analysis 2026-06-19 16:05 → Flow system is cleanly extensible with typed step enum and per-user completion tracking; admin guard is DB-confirmed not JWT-claimed
 
 Two well-designed structural patterns: (1) The `Flow` + `FlowStep` + `UserFlowView` system in the Prisma schema provides a content-addressable onboarding framework: steps are ordered integers with a `FlowStepType` enum (`preferences | tip`), flows have `trigger` (`first_login | manual`), `priority`, `adminOnly`, and `isActive` flags. `UserFlowView` records per-user completion with `skippedSteps`, `responses`, and `completedAt`. Adding a new step type (e.g., `rating`) requires only extending the enum and the response handler in `src/routes/flows.ts`. (2) `requireAdmin` middleware in `src/routes/admin.ts` calls `prisma.user.findUnique({ select: { role: true } })` at request time rather than reading the role from the JWT payload. This means a role downgrade takes effect immediately without requiring token re-issue — correct for an admin escalation model where the JWT's 7-day lifetime is too long to trust for role claims.
