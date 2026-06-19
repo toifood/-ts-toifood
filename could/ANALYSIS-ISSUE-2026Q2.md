@@ -17,6 +17,25 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:analysis 2026-06-19 16:46 → Single-host architecture with OG image blob storage and missing FK indexes as primary growth risks
+
+**Architecture:** Node.js Express on Mac mini M4 (jayreck), Ollama on same host (jayagent), PostgreSQL + Redis local, Cloudflare Tunnel for ingress. All single-instance, no redundancy.
+
+**Key findings:**
+
+1. **OG image blobs in PostgreSQL will degrade performance.** `Recipe.ogImage Bytes` stores ~200–400KB PNG per recipe. The `GET /recipes` list endpoint correctly excludes this column via `select:`, but the blob still occupies PostgreSQL table storage and affects vacuum/backup performance. At 1,000 saved recipes: ~300MB added to the Recipe table. Object storage (Cloudflare R2 or S3) with a URL column is the correct path.
+
+2. **No FK indexes.** PostgreSQL does not auto-create indexes for foreign key columns. `Recipe.userId`, `PantryItem.userId`, `UserFlowView.userId`, `SavedList.userId`, `RecipeReview.recipeId` are all unindexed. As row counts grow, `findMany({ where: { userId } })` queries will scan full tables. These are among the hottest query patterns in the app.
+
+3. **Twemoji CDN fetch at recipe generation time.** Every `POST /recipes/generate` triggers a Twemoji CDN fetch (3-second timeout). The `emojiCache` is in-process memory — reset on restart. CDN latency or downtime adds to end-user recipe generation time.
+
+4. **Ollama serial queue with no depth limit.** Concurrent Ollama requests queue indefinitely. No max-queue-length or timeout-from-queue exists. Under modest load (5+ concurrent users), queue depth can reach 2+ minutes of wait time.
+
+5. **CSV metrics on local filesystem with no backup.** All historical generation data lives on the Mac mini's SSD. No external backup, no cloud copy. Loss of the machine = loss of all metrics history.
+
+6. **README documents removed Favourites API.** The Favourite table was dropped in migration 20260414 but the README still has a full Favourites section with endpoints and response shapes.
+
+**Risk level:** Low at current scale. OG blob storage and missing FK indexes are the items most likely to cause visible degradation as the user base grows.
 ## ISSUE:analysis 2026-06-19 16:05 → DietaryPreference is normalized to a table while continentPreferences is a String[] on User — inconsistent multi-value preference design with a transactionless update path
 
 Two structural concerns: (1) The Prisma schema stores dietary preferences as a normalized `DietaryPreference` table (`id, userId, filter` with FK to User) but stores continent preferences as `continentPreferences String[] @default([])` directly on the `User` model. These are equivalent conceptually (multi-value user preference sets) but handled through entirely different code paths: dietary preferences require `deleteMany + createMany` through a junction table, continent preferences are a single field update. Any query joining recipes to user preferences must take two different paths depending on preference type. (2) `PATCH /users/me/preferences` in `src/routes/users.ts` runs `prisma.dietaryPreference.deleteMany` then `prisma.dietaryPreference.createMany` then conditionally `prisma.user.update` — three sequential writes with no wrapping transaction. A process crash between the deleteMany and createMany leaves the user with no dietary preferences.
