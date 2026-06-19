@@ -17,6 +17,23 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:usage 2026-06-19 16:46 → Metrics are flat-file CSV with no retention, funnel, or user-level aggregation; user IDs committed to git
+
+**Issues found:**
+
+1. **CSV metric files with user IDs are committed to the repo.** The file tree shows `logs/discover-metrics.csv`, `logs/recipe-metrics.csv`, `logs/memory-metrics.csv` as tracked git blobs. These files contain `userId` fields and generation timestamps. User PII in version history is a privacy risk. These files should be added to `.gitignore` immediately.
+
+2. **No retention or funnel metrics.** The CSV tracks per-generation events but has no concept of: daily active users, retention (day 1/7/30 cohorts), generate → save conversion rate, or feature adoption (pantry, lists, flows). There is no way to determine if users are returning.
+
+3. **Daily digest reads only today's data.** `src/digest.ts` filters CSV lines by today's ISO date prefix. No weekly or monthly rollup, no trend comparison, no alert when daily count drops significantly.
+
+4. **Discover metrics not logged for zero-result queries.** `if (scored.length > 0)` gates the `appendDiscoverMetric` call. Users who get no discover results (empty pantry, no shared recipes) are invisible — missing a critical signal for onboarding friction.
+
+5. **Rate limit counter resets on Redis restart.** `GET /recipes/usage` returns Redis counters. If Redis restarts mid-hour, the client sees max limits as if unused, while the actual usage is lost.
+
+6. **`dump.rdb` is committed to the repo.** The file tree shows `dump.rdb` — a Redis RDB snapshot — as a tracked file. This contains rate limit state and should not be in version control.
+
+**Recommendation:** Add `logs/` and `dump.rdb` to `.gitignore` immediately. Add discover logging for zero-result cases. Consider a weekly summary cron in the digest.
 ## ISSUE:usage 2026-06-19 16:05 → OllamaProvider queue is per-instance so concurrent requests bypass serialization; discover LATERAL join has no index on lowercased pantry ingredient
 
 Two resource efficiency concerns: (1) `OllamaProvider` defines `private queue: Promise<unknown> = Promise.resolve()` to serialize Ollama calls, but `src/routes/recipes.ts` calls `new OllamaProvider()` on every request (`const { OllamaProvider } = await import(...); const ollama = new OllamaProvider()`). Each request gets a fresh instance with an empty queue, so concurrent recipe generations each get their own independent queue that never blocks the others. Under concurrent load, multiple Ollama `/api/generate` calls run in parallel against the same `qwen2.5:7b` model, which cannot pipeline requests — this causes latency spikes and potential OOM on the Mac mini M4. (2) The `GET /recipes/discover` LATERAL subquery (`FROM UNNEST(r."pantryUsed") pu WHERE LOWER(pu) IN (SELECT LOWER(ingredient) FROM "PantryItem" WHERE "userId" = ...)`) runs against `PantryItem` with no index on `LOWER(ingredient)`. As shared recipe and pantry counts grow, this becomes a sequential scan per recipe row.
