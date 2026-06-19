@@ -10,6 +10,17 @@ REQUIRED FORMAT FOR EACH ISSUE ENTRY:
 ## ISSUE:{NAME OF ENVIRONMENT} {YYYY-MM-DD HH:MM} → {CONTENT}
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:toifood 2026-06-19 → would-update-md silent write risk — listener 202 does not confirm GitHub commit
+
+When Mac Mini is on and would-update-md receives 202, the listener runs async. If writeEntriesToGitHub fails (token issue, API error), the workflow shows green but nothing commits to -ts-toifood-dev. Only detectable via pm2 logs toigroup-listener on the Mac Mini after each run.
+## ISSUE:toifood 2026-06-19 → would-update-md fails with Cloudflare 1033 when Mac Mini is off
+
+Error 1033 = Argo Tunnel unreachable — origin server not connected. Workflow fails in ~2s with no retry or queue. If Mac Mini is off when the Monday 06:00 UTC schedule fires, the run is permanently lost. Monitor Mac Mini uptime around scheduled run times.
+## ISSUE:toifood 2026-06-13 → three workflow failures on same day — Unauthorized, repo ref missing, curl timeout
+
+(1) would-update-md 06:05 UTC: POST to local.toigroup.co.nz returned Unauthorized — listener rejected credentials. Resolved by next run.
+(2) would-update-timing 06:25 UTC: checkout of toifood/ts-web failed with fatal: couldn't find remote ref refs/heads/main — repo had already been renamed to toifood/-ts-toifood-web but targets.json still referenced old name. Self-resolved after targets.json was updated.
+(3) would-update-md 20:30 UTC: curl timeout exit code 28, max-time 30s — local.toigroup.co.nz unreachable. Transient.
 ## ISSUE:toifood 2026-06-13 → -toifood owns functional pipeline code — violates separation of concerns
 
 `toigroup-listener.js`, `would-update.md` skill, and trigger/timing workflows all live in `toifood/-toifood`. This couples org-level docs to pipeline execution logic. When a second org is added, there is no clean home for shared pipeline code — it would either duplicate into each org or keep accumulating in `-toifood`.
