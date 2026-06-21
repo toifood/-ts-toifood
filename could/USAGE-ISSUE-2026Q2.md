@@ -17,6 +17,18 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:usage 2026-06-21 19:41 → AUTH-METRIC.csv grows unboundedly and 5-query insight fan-out will degrade with user growth
+
+Three performance and resource concerns grounded in the current data and code:
+
+**1. AUTH-METRIC.csv unbounded growth with full-file GitHub sync on every auth event**
+The file currently has 46 rows (Apr–Jun 2026). Every login/register event triggers pushRowToGitHub which downloads the entire file, appends one row, and re-uploads it. As the user base grows, each PUT transfers O(rows) bytes. At 10k auth events the file approaches 500KB and each write downloads and re-uploads it in full. Introduce chunked log files by month, or replace GitHub file writes with an append-only DB table.
+
+**2. GET /insights runs 5 parallel Prisma queries on every call**
+src/routes/insights.ts calls Promise.all with 5 findFirst queries per request. With no caching, each page load that fetches insights hits Postgres 5 times. A single findMany grouped by category would reduce this to one round-trip.
+
+**3. GET /users/:id/profile loads all shared recipes then aggregates in-process**
+prisma.recipe.findMany({ where: { userId: id, shareToken: { not: null } } }) has no row limit. For a user with many shared recipes, all rows are returned to Node.js for in-process counting. Move the aggregation to the database using Prisma groupBy to avoid transferring rows that are immediately summed and discarded.
 ## ISSUE:backend 2026-06-20 11:39 -> Two new usage gaps — AUTH-METRIC pushed to GitHub but IPs stored unredacted, and storeReport output has been silently missing since introduction
 
 **New finding 1 — AUTH-METRIC.csv in GitHub repo contains unredacted user IPs**
