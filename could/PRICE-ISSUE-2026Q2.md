@@ -17,6 +17,16 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:price 2026-06-29 12:37 → Recipe list silently truncates at 500; isPremium derived from open-ended role check that auto-elevates any future role; storeReport writes wrong category prefix
+
+**Finding — `src/routes/recipes.ts` GET /recipes**
+`prisma.recipe.findMany` uses `take: 500` with no pagination cursor and no `totalCount` in the response. A power user who saves more than 500 recipes will receive a silently truncated list — the client has no signal that recipes exist beyond the 500 returned. Oldest recipes drop off the bottom. If premium positioning is intended to include unlimited saves, this cap contradicts the promise with no in-app warning.
+
+**Finding — `isPremium` derivation across codebase**
+`isPremium` is computed as `role !== "free"` in TypeScript (`users.ts`, `recipes.ts`) and `u.role != 'free'` in the `GET /discover` raw SQL. This open-ended check means any future role value added to the `UserRole` enum (e.g. `trial`, `suspended`, `beta`) would automatically grant premium access to every endpoint that gates on `isPremium` without any explicit code change or billing decision. A whitelist (`role === "premium" || role === "admin"`) would be safer as the enum grows.
+
+**Finding — `src/storeReport.ts`**
+Store KPI entries use the prefix `## ISSUE:backend` and `## ASSET:backend` regardless of target file. The could/ category system uses lowercase category names matching the file prefix (analysis, price, usage). `backend` is not a category in the output repo. If storeReport is wired to prepend to a could/ file, every entry will have a mismatched prefix that breaks the anchor-marker format parsing.
 ## ISSUE:price 2026-06-29 12:28 → Marketing landing page has no pricing section or upgrade CTA despite FAQ documenting two tiers
 
 **Finding — `frontend/src/pages/Home.jsx`**
