@@ -17,6 +17,13 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:analysis 2026-06-29 12:28 → 13 inline SVG icon components in SharedRecipe and a Wasm SVG-to-PNG OG pipeline
+
+**Finding — `frontend/src/pages/SharedRecipe.jsx`**
+13 inline SVG icon components (IcoBasket, IcoRestaurant, IcoSparkles, IcoLeaf, IcoFlower, IcoWater, IcoAlert, IcoMoon, IcoFlash, IcoBread, IcoPot, IcoFastFood, IcoChefHat) are defined at the top of the file, mirroring the mobile app Ionicons set. These are a candidate for extraction to a shared `src/icons/` module.
+
+**Finding — `og-worker/src/index.js`**
+The OG worker implements a full SVG-to-PNG pipeline: fetches Twemoji PNGs, composes an SVG with radial-gradient background + title text + emoji, and renders to a 1200×630 PNG via `@resvg/resvg-wasm` (WebAssembly in a Cloudflare Worker). Output is cached at `max-age=86400`.
 ## ASSET:analysis 2026-06-21 19:41 → Redis Lua atomics, Apple JWKS caching, and no-enumeration auth patterns are well-engineered
 
 Three production-ready patterns found in the authentication and rate-limiting layer:
