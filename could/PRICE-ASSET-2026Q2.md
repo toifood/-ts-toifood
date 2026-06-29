@@ -17,6 +17,16 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:price 2026-06-30 06:41 → tier entitlements in one constant; per-provider per-user Redis keys are audit-friendly; admin bypass prevents quota exhaustion
+
+**Finding — `src/middleware/rateLimit.ts` `LIMITS` constant**
+All tier entitlements live in one object (`LIMITS = { free, premium, admin }`), which is the single source of truth for what each subscription tier can do per hour and per provider. Adding a new tier or adjusting a cap is a one-line change in one file with no scattered conditionals to update.
+
+**Finding — `ratelimit:{userId}:{provider}` key pattern**
+The Redis key includes both user ID and provider (ollama/claude) as segments. This means usage per-tier and per-model can be independently inspected (`KEYS ratelimit:*:claude`) for billing audits without a DB query, and a provider outage can be mitigated by resetting only the affected key segment.
+
+**Finding — admin bypass in rate limiter**
+Admins skip rate limiting entirely via an early return after role check, so internal testing and support work cannot accidentally exhaust a production quota or produce misleading usage telemetry.
 ## ASSET:price 2026-06-29 12:37 → Shared authLimiter instance prevents config drift; duplicate-save guard on recipe creation; appstore JWT correctly regenerated per call with 20m expiry
 
 **Finding — `src/routes/auth.ts` `authLimiter`**
