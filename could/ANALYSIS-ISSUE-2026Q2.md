@@ -17,6 +17,19 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:analysis 2026-06-29 12:37 → pluralStem duplicated with diverging logic; dual legacy route mounting; digest hardcodes machine-local path; test scaffold has 0 specs
+
+**Finding — `src/routes/recipes.ts` + `src/routes/cookRecords.ts`**
+`pluralStem` is implemented twice with different rule sets. The `recipes.ts` version (line 256) applies three simple regex rules (oes/ies/s). The `cookRecords.ts` version (lines 5–24) adds a 14-entry irregular dictionary (leaves→leaf, knives→knife, geese→goose, mice→mouse, loaves→loaf) plus an `ee$` invariant guard preventing `cheese` from stripping to `chees`. Same conceptual function, two diverging implementations — a pantry match that passes in cook records could silently fail in recipe generation or vice versa.
+
+**Finding — `src/index.ts`**
+Every route is registered twice: once under `/1-1-1/` (versioned) and once at the legacy root. Ten routes become twenty handler registrations. The legacy block has no sunset mechanism — no version header check, no deprecation log — so the doubled surface grows with every new route added indefinitely.
+
+**Finding — `src/digest.ts` `readInfraHealth()`**
+The function hardcodes the absolute path `/Users/jayagent/.openclaw/logs/infra_health.log`. This path is specific to the production Mac mini. The function is not testable in any other environment and will silently return `infra_health.log not found` on any other machine or containerised deployment.
+
+**Finding — `src/__tests__/`**
+`vitest` is in devDependencies and `vitest.config.ts` exists, but only helper stubs are present (`src/__tests__/helpers/auth.ts`, `db.ts`). No `*.test.ts` or `*.spec.ts` files exist. `npm test` exits with 0 tests run — a false-green that any CI pipeline treating an empty suite as passing would not catch.
 ## ISSUE:analysis 2026-06-29 12:28 → SharedRecipe.jsx is a 745-line monolith with duplicated author render logic
 
 **Finding — `frontend/src/pages/SharedRecipe.jsx`**
