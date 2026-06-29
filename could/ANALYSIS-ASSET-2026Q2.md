@@ -17,6 +17,19 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:analysis 2026-06-30 06:41 → atomic Lua rate-limit, Redis NX cooldown, and structured per-request logging are production-solid patterns
+
+**Finding — `src/middleware/rateLimit.ts` (Lua INCR+EXPIRE)**
+The rate limiter uses an inline Lua script for atomic increment-and-expire, which correctly prevents the race condition where two concurrent requests both observe count=1 and the Redis key never receives an expiry. This is the correct Redis pattern for sliding-window counters — non-atomic alternatives (GET then SET EX) would leak uncapped keys under load.
+
+**Finding — `src/services/ai/insights.ts` (Redis NX cooldown)**
+`runInsightAnalysis` enforces its once-per-week limit with `redis.set(key, "1", "EX", ..., "NX")`. The NX flag makes the gate atomic — parallel post-save triggers from concurrent recipe saves cannot double-fire the insight pipeline.
+
+**Finding — `src/index.ts` (request logging)**
+The global `res.on("finish")` listener logs method, path, status code, duration, and userId for every request in a consistent structured format (`[req] METHOD /path STATUS Xms userId=Y`). This is grep-friendly and provides basic observability without an external APM dependency.
+
+**Finding — `src/middleware/auth.ts`**
+`requireAuth` is single-responsibility and minimal: it extracts the bearer token, verifies it, attaches `userId` to the request, and does nothing else. Token errors map to 401 without leaking internal failure reasons to the response body.
 ## ASSET:analysis 2026-06-29 12:37 → Discover CTE with LATERAL pantry join, irregular pluralStem dictionary in cookRecords, OG generate-then-store pattern, and res.on(finish) request logger
 
 **Finding — `src/routes/recipes.ts` GET /recipes/discover**
