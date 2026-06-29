@@ -17,6 +17,13 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:analysis 2026-06-29 12:28 → SharedRecipe.jsx is a 745-line monolith with duplicated author render logic
+
+**Finding — `frontend/src/pages/SharedRecipe.jsx`**
+The component handles data fetching, timer state, dynamic OG meta injection, and all layout rendering in a single file. The author avatar block is duplicated across the `authorHasStats` true/false branches (lines 673–738 vs 716–738) — both build an identical avatar circle; only the stats sub-section differs.
+
+**Finding — inline styles throughout `src/`**
+Every component (Navbar, Footer, Home, FAQ, SharedRecipe) uses inline `style` objects rather than CSS classes, with only a handful of utility classes in `global.css`. This inflates render-time object allocation and makes visual auditing and theming changes expensive.
 ## ISSUE:analysis 2026-06-21 19:41 → pushRowToGitHub couples auth to GitHub file writes creating race conditions under concurrent logins
 
 Three tight-coupling and scalability concerns in src/routes/auth.ts and related files:
