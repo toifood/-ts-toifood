@@ -17,6 +17,16 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ISSUE ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ISSUE ENTRIES-->
+## ISSUE:usage 2026-06-30 06:41 → N+1 in insight upsert; /records hard take-100 without pagination; in-memory stats cache not shared across pm2 workers
+
+**Finding — `src/services/ai/insights.ts` N+1 insight upsert**
+`runInsightAnalysis` maps each insight candidate to `prisma.userInsight.findFirst({ where: { userId, category, status: "pending" } })` inside a `Promise.all`, firing one SELECT per category (up to 5 sequential round-trips even with Promise.all due to connection pool pressure). These could be collapsed into a single `findMany` with `where: { userId, category: { in: [...] }, status: "pending" }` followed by in-memory grouping before the upsert step.
+
+**Finding — `src/routes/cookRecords.ts` GET `/records` hard take-100**
+The list endpoint fetches up to 100 cook records in one query with a JOIN on the `recipe` relation (title + emoji). There is no cursor pagination and no total count in the response, so a user with more than 100 records silently gets a truncated list with no signal that more exist.
+
+**Finding — `src/index.ts` in-memory `/stats` cache per worker**
+The stats endpoint uses module-level variables (`statsCache`, `statsCachedAt`) with a 60-second TTL. In a pm2 cluster deployment, each worker process holds its own copy — with 4 workers, up to 4 independent DB queries could fire per minute against `recipe.count()` and `user.count()`. Moving the cache to Redis (`SETEX stats:cache 60 ...`) would share it across all workers.
 ## ISSUE:usage 2026-06-29 12:37 → appendMetric uses synchronous fs.appendFileSync on every recipe generation; vitest test infrastructure configured but 0 spec files exist
 
 **Finding — `src/routes/recipes.ts` `appendMetric` and `appendDiscoverMetric`**
