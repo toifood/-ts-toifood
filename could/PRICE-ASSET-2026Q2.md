@@ -17,6 +17,16 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:price 2026-06-29 12:37 → Shared authLimiter instance prevents config drift; duplicate-save guard on recipe creation; appstore JWT correctly regenerated per call with 20m expiry
+
+**Finding — `src/routes/auth.ts` `authLimiter`**
+A single `rateLimit` instance (`windowMs: 15min, max: 10`) is shared across register, login, Apple auth, forgot-password, and resend-verification. Using one shared instance means the limit configuration cannot drift between endpoints — a change to the rate window applies everywhere simultaneously. `standardHeaders: true` correctly surfaces `RateLimit-*` headers per RFC 9110.
+
+**Finding — `src/routes/recipes.ts` POST / duplicate guard**
+Before creating a recipe, the save handler queries for an existing recipe with the same title created by the same user within the past 24 hours (`createdAt: { gte: oneDayAgo }`). The duplicate is logged (`[recipe:save] duplicate title=...`) but not rejected — the save proceeds. This provides an audit trail for double-tap saves (e.g. network retry) without blocking legitimate same-title saves across separate days.
+
+**Finding — `src/services/appstore.ts` `makeToken()`**
+`APPSTORE_PRIVATE_KEY!.replace(/\\n/g, "\n")` normalises the PEM key whether it was stored with literal `\n` escape sequences (common in `.env` files) or with real newlines. A fresh 20-minute JWT is signed per metrics call, matching Apple's maximum token lifetime requirement. No token is reused or cached across requests, eliminating the risk of serving requests with an expired App Store Connect token.
 ## ASSET:price 2026-06-29 12:28 → SharedRecipe.jsx surfaces Premium/Basic tier label and premium author badge as passive upgrade signals
 
 **Finding — `frontend/src/pages/SharedRecipe.jsx` lines 421–427**
