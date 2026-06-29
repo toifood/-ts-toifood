@@ -17,6 +17,19 @@ PATHS:
 would/
 
 ####### <!-- ANCHOR MARKER - ADD ALL NEW ASSET ENTRIES DIRECTLY BELOW THIS LINE, NEVER DELETE OR EDIT PREVIOUS ASSET ENTRIES-->
+## ASSET:analysis 2026-06-29 12:37 → Discover CTE with LATERAL pantry join, irregular pluralStem dictionary in cookRecords, OG generate-then-store pattern, and res.on(finish) request logger
+
+**Finding — `src/routes/recipes.ts` GET /recipes/discover**
+The discover query uses a PostgreSQL CTE with a LATERAL subquery to compute pantry match counts in the database. The LATERAL join iterates `r.pantryUsed` via `UNNEST` and matches against the requesting user's pantry items with a `LOWER()` comparison — no N+1, no in-Node aggregation. The outer query filters, groups, and limits to 20, keeping the result set small regardless of total shared recipe count. This is the correct approach for a multi-user recipe-matching query.
+
+**Finding — `src/routes/cookRecords.ts` `pluralStem`**
+The cook records implementation includes a 14-entry irregular dictionary covering non-obvious food-relevant forms (loaves/loaf, leaves/leaf, geese/goose) plus an `ee$` guard. This level of care in ingredient stem-matching prevents false negatives in pantry coverage calculations for the cook session flow.
+
+**Finding — `src/routes/recipes.ts` OG image pipeline**
+OG images are generated at recipe-generation time (`generateOgImage(emoji)`), returned in the API response as base64, and re-submitted by the client on save where they are stored on the Recipe row. This avoids synchronous canvas rendering on every share-link page load — the heavy computation happens once at generation time and is served from the database thereafter.
+
+**Finding — `src/index.ts` request logger**
+`res.on("finish")` captures `userId` from `req` after auth middleware has run, producing structured `[req] METHOD path STATUS ms userId=` lines for every request. This provides basic APM-style observability without an external SDK and is grep-parseable for per-user request rate analysis.
 ## ASSET:analysis 2026-06-29 12:28 → 13 inline SVG icon components in SharedRecipe and a Wasm SVG-to-PNG OG pipeline
 
 **Finding — `frontend/src/pages/SharedRecipe.jsx`**
